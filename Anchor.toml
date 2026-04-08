@@ -1,0 +1,18 @@
+[toolchain]
+package_manager = "yarn"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.devnet]
+vault = "77bvxx8v6V9zRtEvdYquyc5KbAy1ptpxyHVNGy7FzZ1n"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/wallet-a.json"
+
+[scripts]
+test = "cargo test"
+
+[hooks]
