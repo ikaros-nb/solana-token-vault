@@ -27,6 +27,6 @@ pub struct Deposit<'info> {
     pub token_program: Interface<'info, TokenInterface>,
 }
 
-pub fn handler(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+pub fn handler_deposit(_ctx: Context<Deposit>, _amount: u64) -> Result<()> {
     Ok(())
 }

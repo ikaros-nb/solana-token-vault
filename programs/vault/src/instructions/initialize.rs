@@ -33,7 +33,7 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<Initialize>) -> Result<()> {
+pub fn handler_initialize(ctx: Context<Initialize>) -> Result<()> {
     ctx.accounts.vault.owner = ctx.accounts.payer.key();
     ctx.accounts.vault.bump = ctx.bumps.vault;
     ctx.accounts.vault.mint = ctx.accounts.mint.key();

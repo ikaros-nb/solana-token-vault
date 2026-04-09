@@ -16,10 +16,10 @@ pub mod vault {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        initialize::handler(ctx)
+        initialize::handler_initialize(ctx)
     }
 
     pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
-        deposit::handler(ctx, amount)
+        deposit::handler_deposit(ctx, amount)
     }
 }
