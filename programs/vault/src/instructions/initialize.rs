@@ -36,5 +36,6 @@ pub struct Initialize<'info> {
 pub fn handler(ctx: Context<Initialize>) -> Result<()> {
     ctx.accounts.vault.owner = ctx.accounts.payer.key();
     ctx.accounts.vault.bump = ctx.bumps.vault;
+    ctx.accounts.vault.mint = ctx.accounts.mint.key();
     Ok(())
 }
