@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
+use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
 use crate::VaultState;
 
@@ -27,6 +27,20 @@ pub struct Deposit<'info> {
     pub token_program: Interface<'info, TokenInterface>,
 }
 
-pub fn handler_deposit(_ctx: Context<Deposit>, _amount: u64) -> Result<()> {
+pub fn handler_deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+    let decimals = ctx.accounts.mint.decimals;
+ 
+    let cpi_accounts = TransferChecked {
+        mint: ctx.accounts.mint.to_account_info(),
+        from: ctx.accounts.payer_token_account.to_account_info(),
+        to: ctx.accounts.vault_token_account.to_account_info(),
+        authority: ctx.accounts.payer.to_account_info(),
+    };
+    let cpi_program = ctx.accounts.token_program.key();
+    let cpi_context = CpiContext::new(
+        cpi_program, 
+        cpi_accounts
+    );
+    token_interface::transfer_checked(cpi_context, amount, decimals)?;
     Ok(())
 }
