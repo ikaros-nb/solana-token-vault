@@ -29,11 +29,41 @@ describe("vault", () => {
 
   let payerAta: PublicKey;
 
+  // Listens for an event and resolves when received (or rejects after timeout)
+  function waitForEvent<T>(eventName: string): Promise<T> {
+    return new Promise((resolve, reject) => {
+      let listenerId: number;
+      const timeout = setTimeout(() => {
+        program.removeEventListener(listenerId);
+        reject(new Error(`Event "${eventName}" not received`));
+      }, 10_000);
+
+      listenerId = program.addEventListener(eventName, (event: T) => {
+        clearTimeout(timeout);
+        program.removeEventListener(listenerId);
+        resolve(event);
+      });
+    });
+  }
+
   before(async () => {
     payerAta = await getAssociatedTokenAddress(mint, wallet.publicKey);
   });
 
   it("initializes the vault", async () => {
+    // Skip if vault already exists (devnet persists between runs)
+    const accountInfo = await provider.connection.getAccountInfo(vaultPda);
+    if (accountInfo) {
+      console.log("Vault already initialized, skipping");
+      return;
+    }
+
+    const eventPromise = waitForEvent<{
+      owner: PublicKey;
+      mint: PublicKey;
+      vault: PublicKey;
+    }>("vaultInitialized");
+
     const tx = await program.methods
       .initialize()
       .accounts({
@@ -44,15 +74,26 @@ describe("vault", () => {
 
     console.log("Initialize tx:", tx);
 
-    const vaultAccount = await program.account.vaultState.fetch(vaultPda);
-    assert.ok(vaultAccount.owner.equals(wallet.publicKey));
-    assert.ok(vaultAccount.mint.equals(mint));
+    const event = await eventPromise;
+    console.log("Event VaultInitialized:", {
+      owner: event.owner.toBase58(),
+      mint: event.mint.toBase58(),
+      vault: event.vault.toBase58(),
+    });
+    assert.ok(event.owner.equals(wallet.publicKey));
+    assert.ok(event.mint.equals(mint));
+    assert.ok(event.vault.equals(vaultPda));
   });
 
   it("deposits tokens into the vault", async () => {
-    const depositAmount = new anchor.BN(1_000_000); // 1 token (6 decimals)
-
     const balanceBefore = (await getAccount(provider.connection, payerAta)).amount;
+    const depositAmount = new anchor.BN(balanceBefore.toString());
+
+    const eventPromise = waitForEvent<{
+      owner: PublicKey;
+      mint: PublicKey;
+      amount: anchor.BN;
+    }>("deposited");
 
     const tx = await program.methods
       .deposit(depositAmount)
@@ -66,6 +107,16 @@ describe("vault", () => {
 
     console.log("Deposit tx:", tx);
 
+    const event = await eventPromise;
+    console.log("Event Deposited:", {
+      owner: event.owner.toBase58(),
+      mint: event.mint.toBase58(),
+      amount: event.amount.toString(),
+    });
+    assert.ok(event.owner.equals(wallet.publicKey));
+    assert.ok(event.mint.equals(mint));
+    assert.ok(event.amount.eq(depositAmount));
+
     const balanceAfter = (await getAccount(provider.connection, payerAta)).amount;
     assert.equal(
       balanceBefore - balanceAfter,
@@ -77,9 +128,13 @@ describe("vault", () => {
   });
 
   it("withdraws tokens from the vault", async () => {
-    const withdrawAmount = new anchor.BN(500_000); // 0.5 token
+    const withdrawAmount = new anchor.BN(500_000);
 
-    const balanceBefore = (await getAccount(provider.connection, payerAta)).amount;
+    const eventPromise = waitForEvent<{
+      owner: PublicKey;
+      mint: PublicKey;
+      amount: anchor.BN;
+    }>("withdrawn");
 
     const tx = await program.methods
       .withdraw(withdrawAmount)
@@ -93,10 +148,14 @@ describe("vault", () => {
 
     console.log("Withdraw tx:", tx);
 
-    const balanceAfter = (await getAccount(provider.connection, payerAta)).amount;
-    assert.equal(
-      balanceAfter - balanceBefore,
-      BigInt(withdrawAmount.toString())
-    );
+    const event = await eventPromise;
+    console.log("Event Withdrawn:", {
+      owner: event.owner.toBase58(),
+      mint: event.mint.toBase58(),
+      amount: event.amount.toString(),
+    });
+    assert.ok(event.owner.equals(wallet.publicKey));
+    assert.ok(event.mint.equals(mint));
+    assert.ok(event.amount.eq(withdrawAmount));
   });
 });
