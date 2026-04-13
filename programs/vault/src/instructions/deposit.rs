@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
-use crate::VaultState;
+use crate::{VaultState, Deposited};
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
@@ -42,5 +42,12 @@ pub fn handler_deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         cpi_accounts
     );
     token_interface::transfer_checked(cpi_context, amount, decimals)?;
+
+    emit!(Deposited {
+        owner: ctx.accounts.payer.key(),
+        mint: ctx.accounts.mint.key(),
+        amount,
+    });
+
     Ok(())
 }

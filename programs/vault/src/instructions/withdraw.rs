@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
-use crate::VaultState;
+use crate::{VaultState, Withdrawn};
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
@@ -48,5 +48,12 @@ pub fn handler_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         cpi_accounts
     ).with_signer(signer_seeds);
     token_interface::transfer_checked(cpi_context, amount, decimals)?;
+
+    emit!(Withdrawn {
+        owner: ctx.accounts.payer.key(),
+        mint: ctx.accounts.mint.key(),
+        amount,
+    });
+
     Ok(())
 }

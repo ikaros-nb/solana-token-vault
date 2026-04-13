@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 
-use crate::VaultState;
+use crate::{VaultState, VaultInitialized};
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -37,5 +37,12 @@ pub fn handler_initialize(ctx: Context<Initialize>) -> Result<()> {
     ctx.accounts.vault.owner = ctx.accounts.payer.key();
     ctx.accounts.vault.bump = ctx.bumps.vault;
     ctx.accounts.vault.mint = ctx.accounts.mint.key();
+
+    emit!(VaultInitialized {
+        owner: ctx.accounts.payer.key(),
+        mint: ctx.accounts.mint.key(),
+        vault: ctx.accounts.vault.key(),
+    });
+
     Ok(())
 }
