@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
 use crate::{VaultState, Deposited};
+use crate::TOKEN;
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
@@ -19,7 +20,7 @@ pub struct Deposit<'info> {
 
     #[account(
         mut, 
-        seeds = [b"token", vault.key().as_ref()],
+        seeds = [TOKEN.as_bytes(), vault.key().as_ref()],
         bump
     )]
     pub vault_token_account: InterfaceAccount<'info, TokenAccount>,

@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 
 use crate::{VaultState, VaultInitialized};
+use crate::{TOKEN, VAULT};
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -12,7 +13,7 @@ pub struct Initialize<'info> {
         init, 
         payer = payer, 
         space = 8 + VaultState::INIT_SPACE, 
-        seeds = [b"vault", payer.key().as_ref()], 
+        seeds = [VAULT.as_bytes(), payer.key().as_ref()], 
         bump
     )]
     pub vault: Account<'info, VaultState>,
@@ -23,7 +24,7 @@ pub struct Initialize<'info> {
         token::mint = mint,
         token::authority = vault,
         token::token_program = token_program,
-        seeds = [b"token", vault.key().as_ref()],
+        seeds = [TOKEN.as_bytes(), vault.key().as_ref()],
         bump
     )]
     pub token_account: InterfaceAccount<'info, TokenAccount>,

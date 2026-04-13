@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
 use crate::{VaultState, Withdrawn};
+use crate::{TOKEN, VAULT};
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
@@ -19,7 +20,7 @@ pub struct Withdraw<'info> {
 
     #[account(
         mut, 
-        seeds = [b"token", vault.key().as_ref()],
+        seeds = [TOKEN.as_bytes(), vault.key().as_ref()],
         bump
     )]
     pub vault_token_account: InterfaceAccount<'info, TokenAccount>,
@@ -29,7 +30,7 @@ pub struct Withdraw<'info> {
 
 pub fn handler_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
     let signer_seeds: &[&[&[u8]]] = &[&[
-        b"vault", 
+        VAULT.as_bytes(), 
         ctx.accounts.payer.key.as_ref(),
         &[ctx.accounts.vault.bump]
     ]];

@@ -1,4 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[constant]
-pub const SEED: &str = "anchor";
+pub const TOKEN: &str = "token";
+
+#[constant]
+pub const VAULT: &str = "vault";
