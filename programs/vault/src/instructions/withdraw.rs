@@ -1,12 +1,12 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
-use crate::{VaultState, Withdrawn};
+use crate::{error::ErrorCode, VaultState, Withdrawn};
 use crate::{TOKEN, VAULT};
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
-    #[account(mut, constraint = payer.key() == vault.owner)]
+    #[account(mut, constraint = payer.key() == vault.owner @ ErrorCode::Unauthorized)]
     pub payer: Signer<'info>,
 
     #[account()]
@@ -29,6 +29,8 @@ pub struct Withdraw<'info> {
 }
 
 pub fn handler_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
+    require!(amount > 0, ErrorCode::ZeroAmount);
+
     let signer_seeds: &[&[&[u8]]] = &[&[
         VAULT.as_bytes(), 
         ctx.accounts.payer.key.as_ref(),

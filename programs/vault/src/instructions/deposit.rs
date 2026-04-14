@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
-use crate::{VaultState, Deposited};
+use crate::{error::ErrorCode, VaultState, Deposited};
 use crate::TOKEN;
 
 #[derive(Accounts)]
@@ -29,6 +29,7 @@ pub struct Deposit<'info> {
 }
 
 pub fn handler_deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+    require!(amount > 0, ErrorCode::ZeroAmount);
     let decimals = ctx.accounts.mint.decimals;
  
     let cpi_accounts = TransferChecked {
