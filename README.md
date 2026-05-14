@@ -19,7 +19,7 @@ Built with Anchor 1.0.0 on devnet.
 anchor build
 
 # Deploy to devnet
-anchor deploy
+anchor program deploy
 
 # Run tests (requires a running validator or devnet)
 anchor test --skip-local-validator
