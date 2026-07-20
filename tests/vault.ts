@@ -108,6 +108,7 @@ describe("vault", () => {
       amount: event.data.amount.toString(),
     });
     assert.ok(event.data.owner.equals(wallet.publicKey));
+    assert.ok(event.data.depositor.equals(wallet.publicKey));
     assert.ok(event.data.mint.equals(mint));
     assert.ok(event.data.amount.eq(depositAmount));
 

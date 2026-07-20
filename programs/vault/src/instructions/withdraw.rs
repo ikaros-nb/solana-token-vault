@@ -19,11 +19,19 @@ pub struct Withdraw<'info> {
     #[account(constraint = vault.mint == mint.key())]
     pub mint: InterfaceAccount<'info, Mint>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = payer,
+        token::token_program = token_program,
+    )]
     pub payer_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         mut,
+        token::mint = mint,
+        token::authority = vault,
+        token::token_program = token_program,
         seeds = [TOKEN.as_bytes(), vault.key().as_ref()],
         bump
     )]
@@ -34,6 +42,10 @@ pub struct Withdraw<'info> {
 
 pub fn handler_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
     require!(amount > 0, ErrorCode::ZeroAmount);
+    require!(
+        amount <= ctx.accounts.vault_token_account.amount,
+        ErrorCode::InsufficientFunds
+    );
 
     let signer_seeds: &[&[&[u8]]] = &[&[
         VAULT.as_bytes(),

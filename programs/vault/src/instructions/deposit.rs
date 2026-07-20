@@ -10,19 +10,28 @@ pub struct Deposit<'info> {
     pub payer: Signer<'info>,
 
     #[account(
-        seeds = [VAULT.as_bytes(), vault.owner.as_ref()],
+        seeds = [VAULT.as_bytes(), payer.key().as_ref()],
         bump = vault.bump,
+        constraint = vault.owner == payer.key() @ ErrorCode::Unauthorized,
     )]
     pub vault: Account<'info, VaultState>,
 
     #[account(constraint = vault.mint == mint.key())]
     pub mint: InterfaceAccount<'info, Mint>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = payer,
+        token::token_program = token_program,
+    )]
     pub payer_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         mut,
+        token::mint = mint,
+        token::authority = vault,
+        token::token_program = token_program,
         seeds = [TOKEN.as_bytes(), vault.key().as_ref()],
         bump
     )]
@@ -46,7 +55,8 @@ pub fn handler_deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
     token_interface::transfer_checked(cpi_context, amount, decimals)?;
 
     emit!(Deposited {
-        owner: ctx.accounts.payer.key(),
+        owner: ctx.accounts.vault.owner,
+        depositor: ctx.accounts.payer.key(),
         mint: ctx.accounts.mint.key(),
         amount,
     });

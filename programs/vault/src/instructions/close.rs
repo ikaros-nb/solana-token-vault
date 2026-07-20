@@ -3,7 +3,7 @@ use anchor_spl::token_interface::{
     self, CloseAccount, Mint, TokenAccount, TokenInterface, TransferChecked,
 };
 
-use crate::{error::ErrorCode, VaultState};
+use crate::{error::ErrorCode, Closed, VaultState};
 use crate::{TOKEN, VAULT};
 
 #[derive(Accounts)]
@@ -23,11 +23,19 @@ pub struct Close<'info> {
     #[account(constraint = vault.mint == mint.key())]
     pub mint: InterfaceAccount<'info, Mint>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = payer,
+        token::token_program = token_program,
+    )]
     pub payer_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         mut,
+        token::mint = mint,
+        token::authority = vault,
+        token::token_program = token_program,
         seeds = [TOKEN.as_bytes(), vault.key().as_ref()],
         bump
     )]
@@ -67,9 +75,16 @@ pub fn handler_close(ctx: Context<Close>) -> Result<()> {
         destination: ctx.accounts.payer.to_account_info(),
         authority: ctx.accounts.vault.to_account_info(),
     };
-    let close_ctx = CpiContext::new(ctx.accounts.token_program.key(), close_accounts);
+    let close_ctx =
+        CpiContext::new(ctx.accounts.token_program.key(), close_accounts).with_signer(signer_seeds);
 
     token_interface::close_account(close_ctx)?;
+
+    emit!(Closed {
+        owner: ctx.accounts.payer.key(),
+        mint: ctx.accounts.mint.key(),
+        amount,
+    });
 
     Ok(())
 }
