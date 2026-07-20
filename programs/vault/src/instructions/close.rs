@@ -83,6 +83,7 @@ pub fn handler_close(ctx: Context<Close>) -> Result<()> {
     emit!(Closed {
         owner: ctx.accounts.payer.key(),
         mint: ctx.accounts.mint.key(),
+        vault: ctx.accounts.vault.key(),
         amount,
     });
 

@@ -6,7 +6,6 @@ use crate::{TOKEN, VAULT};
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
-    #[account(mut, constraint = payer.key() == vault.owner @ ErrorCode::Unauthorized)]
     pub payer: Signer<'info>,
 
     #[account(
@@ -68,6 +67,7 @@ pub fn handler_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
     emit!(Withdrawn {
         owner: ctx.accounts.payer.key(),
         mint: ctx.accounts.mint.key(),
+        vault: ctx.accounts.vault.key(),
         amount,
     });
 

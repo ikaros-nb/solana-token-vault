@@ -6,7 +6,6 @@ use crate::{TOKEN, VAULT};
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
-    #[account(mut)]
     pub payer: Signer<'info>,
 
     #[account(
@@ -58,6 +57,7 @@ pub fn handler_deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         owner: ctx.accounts.vault.owner,
         depositor: ctx.accounts.payer.key(),
         mint: ctx.accounts.mint.key(),
+        vault: ctx.accounts.vault.key(),
         amount,
     });
 
