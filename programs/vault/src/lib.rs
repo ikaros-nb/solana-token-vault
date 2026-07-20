@@ -28,4 +28,8 @@ pub mod vault {
     pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         withdraw::handler_withdraw(ctx, amount)
     }
+
+    pub fn close(ctx: Context<Close>) -> Result<()> {
+        close::handler_close(ctx)
+    }
 }
