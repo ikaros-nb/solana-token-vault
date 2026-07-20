@@ -9,7 +9,11 @@ pub struct Withdraw<'info> {
     #[account(mut, constraint = payer.key() == vault.owner @ ErrorCode::Unauthorized)]
     pub payer: Signer<'info>,
 
-    #[account()]
+    #[account(
+        seeds = [VAULT.as_bytes(), payer.key().as_ref()],
+        bump = vault.bump,
+        constraint = vault.owner == payer.key() @ ErrorCode::Unauthorized
+    )]
     pub vault: Account<'info, VaultState>,
 
     #[account(constraint = vault.mint == mint.key())]

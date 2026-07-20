@@ -1,15 +1,18 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
-use crate::TOKEN;
 use crate::{error::ErrorCode, Deposited, VaultState};
+use crate::{TOKEN, VAULT};
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    #[account()]
+    #[account(
+        seeds = [VAULT.as_bytes(), vault.owner.as_ref()],
+        bump = vault.bump,
+    )]
     pub vault: Account<'info, VaultState>,
 
     #[account(constraint = vault.mint == mint.key())]

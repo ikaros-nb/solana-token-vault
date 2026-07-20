@@ -1,15 +1,23 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{self, CloseAccount, Mint, TokenAccount, TokenInterface, TransferChecked};
+use anchor_spl::token_interface::{
+    self, CloseAccount, Mint, TokenAccount, TokenInterface, TransferChecked,
+};
 
 use crate::{error::ErrorCode, VaultState};
 use crate::{TOKEN, VAULT};
 
 #[derive(Accounts)]
 pub struct Close<'info> {
-    #[account(mut, constraint = payer.key() == vault.owner @ ErrorCode::Unauthorized)]
+    #[account(mut)]
     pub payer: Signer<'info>,
 
-    #[account(mut, close = payer)]
+    #[account(
+        mut,
+        seeds = [VAULT.as_bytes(), payer.key().as_ref()],
+        bump = vault.bump,
+        close = payer,
+        constraint = vault.owner == payer.key() @ ErrorCode::Unauthorized
+    )]
     pub vault: Account<'info, VaultState>,
 
     #[account(constraint = vault.mint == mint.key())]
@@ -47,10 +55,8 @@ pub fn handler_close(ctx: Context<Close>) -> Result<()> {
             to: ctx.accounts.payer_token_account.to_account_info(),
             authority: ctx.accounts.vault.to_account_info(),
         };
-        let cpi_context = CpiContext::new(
-            ctx.accounts.token_program.key(),
-            cpi_accounts
-        ).with_signer(signer_seeds);
+        let cpi_context = CpiContext::new(ctx.accounts.token_program.key(), cpi_accounts)
+            .with_signer(signer_seeds);
 
         token_interface::transfer_checked(cpi_context, amount, decimals)?;
     }
@@ -61,10 +67,7 @@ pub fn handler_close(ctx: Context<Close>) -> Result<()> {
         destination: ctx.accounts.payer.to_account_info(),
         authority: ctx.accounts.vault.to_account_info(),
     };
-    let close_ctx = CpiContext::new(
-        ctx.accounts.token_program.key(),
-        close_accounts,
-    );
+    let close_ctx = CpiContext::new(ctx.accounts.token_program.key(), close_accounts);
 
     token_interface::close_account(close_ctx)?;
 
