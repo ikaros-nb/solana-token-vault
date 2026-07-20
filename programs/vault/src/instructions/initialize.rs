@@ -35,9 +35,11 @@ pub struct Initialize<'info> {
 }
 
 pub fn handler_initialize(ctx: Context<Initialize>) -> Result<()> {
-    ctx.accounts.vault.owner = ctx.accounts.payer.key();
-    ctx.accounts.vault.bump = ctx.bumps.vault;
-    ctx.accounts.vault.mint = ctx.accounts.mint.key();
+    ctx.accounts.vault.set_inner(VaultState {
+        owner: ctx.accounts.payer.key(),
+        bump: ctx.bumps.vault,
+        mint: ctx.accounts.mint.key()
+    });
 
     emit!(VaultInitialized {
         owner: ctx.accounts.payer.key(),
