@@ -19,7 +19,7 @@ pub struct Withdraw<'info> {
     pub payer_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
-        mut, 
+        mut,
         seeds = [TOKEN.as_bytes(), vault.key().as_ref()],
         bump
     )]
@@ -32,13 +32,13 @@ pub fn handler_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
     require!(amount > 0, ErrorCode::ZeroAmount);
 
     let signer_seeds: &[&[&[u8]]] = &[&[
-        VAULT.as_bytes(), 
+        VAULT.as_bytes(),
         ctx.accounts.payer.key.as_ref(),
-        &[ctx.accounts.vault.bump]
+        &[ctx.accounts.vault.bump],
     ]];
 
     let decimals = ctx.accounts.mint.decimals;
- 
+
     let cpi_accounts = TransferChecked {
         mint: ctx.accounts.mint.to_account_info(),
         from: ctx.accounts.vault_token_account.to_account_info(),
@@ -46,10 +46,7 @@ pub fn handler_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         authority: ctx.accounts.vault.to_account_info(),
     };
     let cpi_program = ctx.accounts.token_program.key();
-    let cpi_context = CpiContext::new(
-        cpi_program, 
-        cpi_accounts
-    ).with_signer(signer_seeds);
+    let cpi_context = CpiContext::new(cpi_program, cpi_accounts).with_signer(signer_seeds);
     token_interface::transfer_checked(cpi_context, amount, decimals)?;
 
     emit!(Withdrawn {

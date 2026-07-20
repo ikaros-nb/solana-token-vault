@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 
-use crate::{VaultState, VaultInitialized};
+use crate::{VaultInitialized, VaultState};
 use crate::{TOKEN, VAULT};
 
 #[derive(Accounts)]
@@ -10,10 +10,10 @@ pub struct Initialize<'info> {
     pub payer: Signer<'info>,
 
     #[account(
-        init, 
-        payer = payer, 
-        space = 8 + VaultState::INIT_SPACE, 
-        seeds = [VAULT.as_bytes(), payer.key().as_ref()], 
+        init,
+        payer = payer,
+        space = 8 + VaultState::INIT_SPACE,
+        seeds = [VAULT.as_bytes(), payer.key().as_ref()],
         bump
     )]
     pub vault: Account<'info, VaultState>,
@@ -38,7 +38,7 @@ pub fn handler_initialize(ctx: Context<Initialize>) -> Result<()> {
     ctx.accounts.vault.set_inner(VaultState {
         owner: ctx.accounts.payer.key(),
         bump: ctx.bumps.vault,
-        mint: ctx.accounts.mint.key()
+        mint: ctx.accounts.mint.key(),
     });
 
     emit!(VaultInitialized {

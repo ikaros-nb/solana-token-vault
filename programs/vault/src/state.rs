@@ -11,9 +11,9 @@ pub struct VaultState {
 #[cfg(test)]
 mod tests {
     use super::VaultState;
-    use anchor_lang::Discriminator;
     use anchor_lang::prelude::*;
     use anchor_lang::AnchorSerialize;
+    use anchor_lang::Discriminator;
     use std::str::FromStr;
 
     /// Golden bytes for Swift / off-chain decoders: discriminator ++ Borsh body.
@@ -36,7 +36,10 @@ mod tests {
         bytes.extend(body);
         println!(
             "{}",
-            bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>()
+            bytes
+                .iter()
+                .map(|b| format!("{:02x}", b))
+                .collect::<String>()
         );
     }
 }
