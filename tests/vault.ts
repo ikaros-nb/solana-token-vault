@@ -149,4 +149,54 @@ describe("vault", () => {
     assert.ok(event.data.mint.equals(mint));
     assert.ok(event.data.amount.eq(withdrawAmount));
   });
+
+  it("closes the vault", async () => {
+    const vaultBalanceBefore = (
+      await getAccount(provider.connection, vaultTokenAccount)
+    ).amount;
+    const payerBalanceBefore = (
+      await getAccount(provider.connection, payerAta)
+    ).amount;
+
+    const tx = await program.methods
+      .close()
+      .accounts({
+        vault: vaultPda,
+        mint: mint,
+        payerTokenAccount: payerAta,
+        tokenProgram: TOKEN_PROGRAM_ID
+      })
+      .rpc();
+
+    console.log("Close tx:", tx);
+
+    const events = await getEvents(tx);
+    const event = events.find((e) => e.name === "closed");
+    assert.ok(event, "Closed event not found");
+    console.log("Event Closed:", {
+      owner: event.data.owner.toBase58(),
+      mint: event.data.mint.toBase58(),
+      vault: event.data.vault.toBase58(),
+      amount: event.data.amount.toString(),
+    });
+    assert.ok(event.data.owner.equals(wallet.publicKey));
+    assert.ok(event.data.mint.equals(mint));
+    assert.ok(event.data.vault.equals(vaultPda));
+    assert.ok(event.data.amount.eq(new anchor.BN(vaultBalanceBefore.toString())));
+
+    const payerBalanceAfter = (
+      await getAccount(provider.connection, payerAta)
+    ).amount;
+    assert.equal(
+      payerBalanceAfter - payerBalanceBefore,
+      vaultBalanceBefore
+    );
+
+    // Vault state and vault token account should be closed
+    const vaultInfo = await provider.connection.getAccountInfo(vaultPda);
+    assert.isNull(vaultInfo, "Vault account should be closed");
+
+    const vaultTokenInfo = await provider.connection.getAccountInfo(vaultTokenAccount);
+    assert.isNull(vaultTokenInfo, "Vault token account should be closed");
+  });
 });

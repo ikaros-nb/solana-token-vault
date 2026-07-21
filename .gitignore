@@ -7,3 +7,6 @@ test-ledger
 .yarn
 .surfpool
 .claude/
+.env
+.env.*
+!.env.example
